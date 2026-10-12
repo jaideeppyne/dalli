@@ -22,10 +22,10 @@ jobs:
           fetch-depth: 0
           ref: fix/metadata-network-errors
       - name: Install supported memcached
-        working-directory: scripts
+        working-directory: ${{ runner.temp }}
         env:
           MEMCACHED_VERSION: ${{ matrix.memcached }}
-        run: bash install_memcached.sh
+        run: bash "$GITHUB_WORKSPACE/scripts/install_memcached.sh"
       - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8
         with:
           ruby-version: ${{ matrix.ruby }}

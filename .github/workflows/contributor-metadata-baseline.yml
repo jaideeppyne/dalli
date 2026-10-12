@@ -1,0 +1,42 @@
+name: Contributor metadata network baseline
+
+on:
+  push:
+    branches: [verify/metadata-network-baseline]+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Install supported memcached floor
+        working-directory: scripts
+        env:
+          MEMCACHED_VERSION: '1.6.27'
+        run: bash install_memcached.sh
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      - name: Confirm unchanged production and expected regression failures
+        shell: bash
+        run: |
+          git diff --exit-code 429d35f86b92072735425f4d2bc113689d6c1f91 -- lib
+          mkdir -p proof
+          set +e
+          timeout 120 bundle exec ruby -Itest test/integration/test_metadata_network_errors.rb > proof/baseline.log 2>&1
+          rc=$?
+          set -e
+          cat proof/baseline.log
+          test "$rc" = 1
+          grep -Eq '7 runs, [0-9]+ assertions, 6 failures, 0 errors, 0 skips' proof/baseline.log
+          sha256sum proof/baseline.log > proof/SHA256SUMS
+          git rev-parse HEAD > proof/commit.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: metadata-network-baseline
+          path: proof

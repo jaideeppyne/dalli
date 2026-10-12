@@ -1,0 +1,59 @@
+name: Contributor metadata network fixed verification
+
+on:
+  push:
+    branches: [verify/metadata-network-fixed]
+
+permissions:
+  contents: read
+
+jobs:
+  verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['3.4', '4.0']
+        memcached: ['1.6.27', '1.6.45']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          ref: fix/metadata-network-errors
+      - name: Install supported memcached
+        working-directory: scripts
+        env:
+          MEMCACHED_VERSION: ${{ matrix.memcached }}
+        run: bash install_memcached.sh
+      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Capture exact source and native full lint
+        shell: bash
+        run: |
+          mkdir -p proof
+          git rev-parse HEAD | tee proof/commit.txt
+          git status --porcelain | tee proof/status-before.txt
+          ruby --version | tee proof/ruby.txt
+          memcached --version | tee proof/memcached.txt
+          bundle exec rubocop 2>&1 | tee proof/rubocop.log
+      - name: Full native test suite
+        shell: bash
+        run: timeout 900 bundle exec rake 2>&1 | tee proof/full-suite.log
+      - name: Twenty fresh regression processes without retries
+        shell: bash
+        run: |
+          for seed in $(seq 1 20); do
+            timeout 120 bundle exec ruby -Itest test/integration/test_metadata_network_errors.rb --seed "$seed" \
+              2>&1 | tee "proof/regression-$seed.log"
+            grep -Eq '7 runs, [0-9]+ assertions, 0 failures, 0 errors, 0 skips' "proof/regression-$seed.log"
+          done
+          git diff --exit-code
+          sha256sum proof/*.log > proof/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: metadata-network-fixed-ruby-${{ matrix.ruby }}-memcached-${{ matrix.memcached }}
+          path: proof

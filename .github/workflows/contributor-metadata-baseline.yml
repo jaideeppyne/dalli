@@ -2,7 +2,7 @@ name: Contributor metadata network baseline
 
 on:
   push:
-    branches: [verify/metadata-network-baseline]+
+    branches: [verify/metadata-network-baseline]
 permissions:
   contents: read
 

@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+          ref: test/metadata-disconnect-source
       - name: Install supported memcached floor outside source tree
         working-directory: ${{ runner.temp }}
         env:
@@ -33,7 +34,7 @@ jobs:
           set -e
           cat proof/baseline.log
           test "$rc" = 1
-          grep -Eq '8 runs, [0-9]+ assertions, 6 failures, 0 errors, 0 skips' proof/baseline.log
+          grep -Eq '12 runs, [0-9]+ assertions, 9 failures, 0 errors, 0 skips' proof/baseline.log
           sha256sum proof/baseline.log > proof/SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: always()

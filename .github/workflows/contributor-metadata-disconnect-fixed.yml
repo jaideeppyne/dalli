@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: c34616d5e94810dc427f533e97a75f7e3db64432
+          ref: 5ba45b85f57b1ced68eb4bb6ab1b095e63409086
           fetch-depth: 0
       - name: Install supported memcached outside source tree
         working-directory: ${{ runner.temp }}
@@ -32,7 +32,7 @@ jobs:
         run: |
           mkdir -p proof
           git rev-parse HEAD | tee proof/source.txt
-          test "$(git rev-parse HEAD)" = c34616d5e94810dc427f533e97a75f7e3db64432
+          test "$(git rev-parse HEAD)" = 5ba45b85f57b1ced68eb4bb6ab1b095e63409086
           ruby --version | tee proof/ruby.txt
           memcached --version | tee proof/memcached.txt
           bundle exec rubocop 2>&1 | tee proof/rubocop.log
@@ -45,7 +45,7 @@ jobs:
           for seed in $(seq 1 20); do
             timeout 120 bundle exec ruby -Itest test/integration/test_metadata_disconnect.rb --seed "$seed" \
               2>&1 | tee "proof/regression-$seed.log"
-            grep -Eq '9 runs, [0-9]+ assertions, 0 failures, 0 errors, 0 skips' "proof/regression-$seed.log"
+            grep -Eq '12 runs, [0-9]+ assertions, 0 failures, 0 errors, 0 skips' "proof/regression-$seed.log"
           done
           git diff --exit-code
           sha256sum proof/*.log > proof/SHA256SUMS

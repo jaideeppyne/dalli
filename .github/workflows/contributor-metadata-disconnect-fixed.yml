@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: d3d0a910750beece702678c73626e08fc5f7465f
+          ref: c34616d5e94810dc427f533e97a75f7e3db64432
           fetch-depth: 0
       - name: Install supported memcached outside source tree
         working-directory: ${{ runner.temp }}
@@ -32,7 +32,7 @@ jobs:
         run: |
           mkdir -p proof
           git rev-parse HEAD | tee proof/source.txt
-          test "$(git rev-parse HEAD)" = d3d0a910750beece702678c73626e08fc5f7465f
+          test "$(git rev-parse HEAD)" = c34616d5e94810dc427f533e97a75f7e3db64432
           ruby --version | tee proof/ruby.txt
           memcached --version | tee proof/memcached.txt
           bundle exec rubocop 2>&1 | tee proof/rubocop.log
